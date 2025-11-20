@@ -9,5 +9,12 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2025-11-20 09:10:04
 */
 public interface UserService extends IService<User> {
-
+    /**
+     *
+     * @param userAccount
+     * @param userPassword
+     * @param checkPassword
+     * @return
+     */
+    long userRegister(String userAccount, String userPassword,String checkPassword);
 }

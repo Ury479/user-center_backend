@@ -33,4 +33,11 @@ public class User {
      * 邮箱
      */
     private String email;
+
+    /**
+     * 用户邮箱和密码
+     */
+    private String userAccount;
+    private String userPassword;
+
 }
