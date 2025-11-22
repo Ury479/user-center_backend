@@ -7,37 +7,50 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 /**
- * 
- * @TableName user
+ * 用户实体类
  */
 @TableName(value ="user")
 @Data
 public class User {
+
     /**
      * 主键ID
      */
-    @TableId
+    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
-     * 姓名
+     * 用户名（你 testAddUser() 用到的字段）
      */
-    private String name;
+    private String username;
 
     /**
-     * 年龄
+     * 用户账号
      */
-    private Integer age;
+    private String userAccount;
+
+    /**
+     * 用户密码（加密后存入）
+     */
+    private String userPassword;
+
+    /**
+     * 用户头像
+     */
+    private String avatarUrl;
+
+    /**
+     * 性别（0-男，1-女）
+     */
+    private Integer gender;
+
+    /**
+     * 手机号码
+     */
+    private String phone;
 
     /**
      * 邮箱
      */
     private String email;
-
-    /**
-     * 用户邮箱和密码
-     */
-    private String userAccount;
-    private String userPassword;
-
 }
