@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 * @createDate 2025-11-20 09:10:04
 */
 public interface UserService extends IService<User> {
+    String USER_LOGIN_STATE = "userLoginState";
+
     /**
      *
      * @param userAccount
@@ -26,5 +28,5 @@ public interface UserService extends IService<User> {
      * @param userPassword
      * @return
      */
-    User doLogin(String userAccount, String userPassword,HttpServletRequest request);
+    User userLogin(String userAccount, String userPassword,HttpServletRequest request);
 }

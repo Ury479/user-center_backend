@@ -12,6 +12,7 @@ import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,6 +34,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * 盐值：混淆密码
      */
     private static final String SALT = "1234567890";
+    /**
+     *
+     */
     public static final String USER_LOGIN_STATE = "userLoginState";
 
 
@@ -92,7 +96,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public User doLogin(String userAccount, String userPassword, HttpServletRequest request) {
+    public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         // 1. Basic null / blank check
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             log.info("user login failed: params are blank");
@@ -106,7 +110,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         if (userPassword.length() < 8) {
             log.info("user login failed: password length < 8");
-            return null;
+             return null;
         }
 
         // check invalid characters
@@ -134,12 +138,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 5. Remove password before returning
         user.setUserPassword(null);
 
+        //用户信息脱敏
+        User safetyUser = new User();
+        safetyUser.setId(user.getId());
+        safetyUser.setUsername(user.getUsername());
+        safetyUser.setUserAccount(user.getUserAccount());
+        safetyUser.setAvatarUrl(user.getAvatarUrl());
+        safetyUser.setGender(user.getGender());
+        safetyUser.setUserPassword(user.getUserPassword());
+        safetyUser.setPhone(user.getPhone());
+        safetyUser.setEmail(user.getEmail());
+        safetyUser.setUserStatus(user.getUserStatus());
+        safetyUser.setCreateTime(user.getCreateTime());
+        safetyUser.setUpdateTime(new Date());
+
         // 6. Save login state in session
         if (request != null) {
             request.getSession().setAttribute(USER_LOGIN_STATE, user);
         }
 
-        return user;
+        return safetyUser;
     }
 
 }

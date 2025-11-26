@@ -1,12 +1,27 @@
 spring:
   application:
-    name:user-center
+    name: user-center
 
-  datasource: # ???????? MySQL?
+  datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/user_center?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/user_center?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
     username: root
     password: 123456
 
 server:
   port: 8080
+
+
+mybatis-plus:
+  configuration:
+    # 与教程保持一致（你手写了 @TableField，不需要驼峰映射）
+    map-underscore-to-camel-case: false
+    # 输出 SQL，用于调试
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+  global-config:
+    db-config:
+      # 使用你自己的逻辑删除字段
+      logic-delete-field: isDelete
+      logic-delete-value: 1
+      logic-not-delete-value: 0

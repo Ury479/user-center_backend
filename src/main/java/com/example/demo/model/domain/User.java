@@ -1,56 +1,59 @@
 package com.example.demo.model.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
-/**
- * 用户实体类
- */
-@TableName(value ="user")
-@Data
-public class User {
+import java.io.Serializable;
+import java.util.Date;
 
-    /**
-     * 主键ID
-     */
+/**
+ * User entity matching table "user".
+ */
+@TableName("user")
+@Data
+public class User implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /**
-     * 用户名（你 testAddUser() 用到的字段）
-     */
     private String username;
 
-    /**
-     * 用户账号
-     */
+    @TableField("user_account")
     private String userAccount;
 
-    /**
-     * 用户密码（加密后存入）
-     */
-    private String userPassword;
-
-    /**
-     * 用户头像
-     */
+    @TableField("avatar_url")
     private String avatarUrl;
 
-    /**
-     * 性别（0-男，1-女）
-     */
     private Integer gender;
 
-    /**
-     * 手机号码
-     */
+    @TableField("user_password")
+    private String userPassword;
+
     private String phone;
 
-    /**
-     * 邮箱
-     */
     private String email;
+
+    @TableField("user_status")
+    private Integer userStatus;
+
+    @TableField(value = "create_time", fill = FieldFill.INSERT)
+    private Date createTime;
+
+    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
+    private Date updateTime;
+
+    @TableLogic               // 新增这一行，和教程保持一致
+    @TableField("is_delete")  // 指定数据库列名
+    private Integer isDelete;
+
+    /**
+     * 关键新增字段 —— 用户角色（教程中 admin=1, 普通用户=0）
+     */
+    @TableField("role")
+    private Integer role;
+
+    public static final int ADMIN_ROLE = 1;
+
 }

@@ -77,6 +77,19 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
 
+        <!-- Bean Validation（提供 javax.validation + hibernate validator） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- Swagger 注解支持 -->
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>1.6.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>
