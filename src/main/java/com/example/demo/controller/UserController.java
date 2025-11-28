@@ -23,19 +23,23 @@ public class UserController {
 
     @PostMapping("/register")
     public Long userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+
         if (userRegisterRequest == null) {
             return null;
         }
+
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
 
-        if (StringUtils.isAnyBlank(userAccount,userPassword,checkPassword)) {
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
             return null;
         }
-        long id = userService.userRegister(userAccount, userPassword, checkPassword);
-        return id;
+
+        // 调用 service 注册
+        return userService.userRegister(userAccount, userPassword, checkPassword);
     }
+
 
     @PostMapping("/login")
     public User userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
@@ -52,6 +56,37 @@ public class UserController {
 
         // 正确调用登录方法
         return userService.userLogin(userAccount, userPassword, request);
+    }
+
+    /**
+     * 获取当前登录用户（前端 Pinia、GlobalHeader、axios 拦截器依赖）
+     */
+    @GetMapping("/current")
+    public User getCurrentUser(HttpServletRequest request) {
+
+        // 从 Session 中读取登录态
+        Object userObj = request.getSession().getAttribute(UserService.USER_LOGIN_STATE);
+
+        if (userObj == null) {
+            return null;
+        }
+
+        // 返回安全脱敏后的用户
+        return (User) userObj;
+    }
+
+    /**
+     * 用户注销 —— 前端 userLogout() 对应的 API（必须补充）
+     */
+    @PostMapping("/logout")
+    public boolean logout(HttpServletRequest request) {
+        if (request == null) {
+            return false;
+        }
+
+        // 清除 Session 登录态
+        request.getSession().removeAttribute(UserService.USER_LOGIN_STATE);
+        return true;
     }
 
     @GetMapping("/search")
@@ -83,9 +118,14 @@ public class UserController {
      * @return
      */
     private boolean isAdmin(HttpServletRequest request) {
-        // 1. 校验是否登录
-        User userObj = (User) request.getSession().getAttribute(UserService.USER_LOGIN_STATE);
-        User user = (User) userObj;
-        return user != null && user.getRole() == ADMIN_ROLE;
+        // 从 session 取登录用户
+        User user = (User) request.getSession().getAttribute(UserService.USER_LOGIN_STATE);
+
+        // 判断是否管理员
+        return user != null
+                && user.getUserRole() != null
+                && user.getUserRole() == User.ADMIN_ROLE;
+
     }
+
 }

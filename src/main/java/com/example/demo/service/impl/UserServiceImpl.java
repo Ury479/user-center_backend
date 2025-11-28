@@ -151,10 +151,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setUserStatus(user.getUserStatus());
         safetyUser.setCreateTime(user.getCreateTime());
         safetyUser.setUpdateTime(new Date());
+        // ⭐关键：把 isDelete 和 userRole 也拷贝过来
+        safetyUser.setIsDelete(user.getIsDelete());
+        safetyUser.setUserRole(user.getUserRole());
 
         // 6. Save login state in session
         if (request != null) {
-            request.getSession().setAttribute(USER_LOGIN_STATE, user);
+            request.getSession().setAttribute(USER_LOGIN_STATE, safetyUser);
         }
 
         return safetyUser;

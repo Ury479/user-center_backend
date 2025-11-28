@@ -31,8 +31,16 @@ public class User implements Serializable {
     @TableField("user_password")
     private String userPassword;
 
+    /**
+     * phone number
+     */
+    @TableField("phone")
     private String phone;
 
+    /**
+     * email
+     */
+    @TableField("email")
     private String email;
 
     @TableField("user_status")
@@ -51,8 +59,13 @@ public class User implements Serializable {
     /**
      * 关键新增字段 —— 用户角色（教程中 admin=1, 普通用户=0）
      */
-    @TableField("role")
-    private Integer role;
+    @TableField("userRole")
+    private Integer userRole;
+
+    /**
+     * default role
+     */
+    public static final int DEFAULT_ROLE = 0;
 
     public static final int ADMIN_ROLE = 1;
 
