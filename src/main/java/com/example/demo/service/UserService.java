@@ -9,9 +9,12 @@ import javax.servlet.http.HttpServletRequest;
 * @author ury
 * @description 针对表【user】的数据库操作Service
 * @createDate 2025-11-20 09:10:04
+ * 星球注释
 */
 public interface UserService extends IService<User> {
     String USER_LOGIN_STATE = "userLoginState";
+
+    long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode);
 
     /**
      *
@@ -29,4 +32,14 @@ public interface UserService extends IService<User> {
      * @return
      */
     User userLogin(String userAccount, String userPassword,HttpServletRequest request);
+
+    /**
+     * 用户注销
+     */
+    int userLogout(HttpServletRequest request);
+
+    /**
+     * 用户信息脱敏
+     */
+    User getSafetyUser(User originUser);
 }

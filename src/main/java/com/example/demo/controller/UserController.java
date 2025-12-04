@@ -1,6 +1,10 @@
 package com.example.demo.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.example.demo.common.BaseResponse;
+import com.example.demo.common.ErrorCode;
+import com.example.demo.common.ResultUtils;
+import com.example.demo.exception.BusinessException;
 import com.example.demo.model.domain.request.UserLoginRequest;
 import com.example.demo.model.domain.request.UserRegisterRequest;
 import com.example.demo.model.domain.User;
@@ -12,8 +16,9 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static com.example.demo.model.domain.User.ADMIN_ROLE;
+import static com.example.demo.service.UserService.USER_LOGIN_STATE;
 
 @RestController
 @RequestMapping("/user")
@@ -22,94 +27,107 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public Long userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public BaseResponse <Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
 
         if (userRegisterRequest == null) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求体为空");
         }
 
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
+        String planetCode = userRegisterRequest.getPlanetCode();
 
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            return null;
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword,planetCode)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"存在空参数");
         }
 
         // 调用 service 注册
-        return userService.userRegister(userAccount, userPassword, checkPassword);
+        long result = userService.userRegister(userAccount, userPassword, checkPassword,planetCode);
+        return ResultUtils.success(result);
     }
 
-
     @PostMapping("/login")
-    public User userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if (userLoginRequest == null) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请求体为空");
         }
 
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
 
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号或密码为空");
         }
 
         // 正确调用登录方法
-        return userService.userLogin(userAccount, userPassword, request);
-    }
-
-    /**
-     * 获取当前登录用户（前端 Pinia、GlobalHeader、axios 拦截器依赖）
-     */
-    @GetMapping("/current")
-    public User getCurrentUser(HttpServletRequest request) {
-
-        // 从 Session 中读取登录态
-        Object userObj = request.getSession().getAttribute(UserService.USER_LOGIN_STATE);
-
-        if (userObj == null) {
-            return null;
-        }
-
-        // 返回安全脱敏后的用户
-        return (User) userObj;
+        User user = userService.userLogin(userAccount, userPassword, request);
+        return ResultUtils.success(user);
     }
 
     /**
      * 用户注销 —— 前端 userLogout() 对应的 API（必须补充）
      */
     @PostMapping("/logout")
-    public boolean logout(HttpServletRequest request) {
+    public BaseResponse<Integer> userLogout(HttpServletRequest request) {
         if (request == null) {
-            return false;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求为空");
         }
 
         // 清除 Session 登录态
-        request.getSession().removeAttribute(UserService.USER_LOGIN_STATE);
-        return true;
+        int result = userService.userLogout(request);
+        return ResultUtils.success(result);
+    }
+
+    /**
+     * 获取当前登录用户（前端 Pinia、GlobalHeader、axios 拦截器依赖）
+     */
+    @GetMapping("/current")
+    public BaseResponse<User> getCurrentUser(HttpServletRequest request) {
+        User currentUser = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (currentUser == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "未登录");
+        }
+
+        Long userId = currentUser.getId();
+        User user = userService.getById(userId);
+        User safeUser = userService.getSafetyUser(user);
+        return ResultUtils.success(safeUser);
     }
 
     @GetMapping("/search")
-    public List<User> searchUsers(String username, HttpServletRequest request) {
+    public BaseResponse<List<User>> searchUsers(String username, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return new ArrayList<>();
+           throw new BusinessException(ErrorCode.NO_AUTH,"无管理员权限");
         }
+
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         if (!StringUtils.isAnyBlank(username)) {
             queryWrapper.like("username",username);
         }
-        return userService.list(queryWrapper);
+
+        // 2. 从数据库查询原始用户列表（包含密码等敏感字段）
+        List<User> userList = userService.list(queryWrapper);
+
+        // 3. 对每个用户进行脱敏处理
+        List<User> list = userList.stream()
+                .map(user -> userService.getSafetyUser(user))
+                .collect(Collectors.toList());
+
+        // 4. 返回前端
+        return ResultUtils.success(list);
     }
 
     @PostMapping("/delete")
-    public boolean deleteUsers(@RequestParam long id, HttpServletRequest request) {
+    public BaseResponse<Boolean> deleteUsers(@RequestParam long id, HttpServletRequest request) {
         if (!isAdmin(request)) {
-            return false;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "无管理员权限");
         }
         if (id <= 0) {
-            return false;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "id 非法");
         }
-        return userService.removeById(id);
+        boolean b = userService.removeById(id);
+        return ResultUtils.success(b);
     }
 
     /**
@@ -119,7 +137,7 @@ public class UserController {
      */
     private boolean isAdmin(HttpServletRequest request) {
         // 从 session 取登录用户
-        User user = (User) request.getSession().getAttribute(UserService.USER_LOGIN_STATE);
+        User user = (User) request.getSession().getAttribute(USER_LOGIN_STATE);
 
         // 判断是否管理员
         return user != null

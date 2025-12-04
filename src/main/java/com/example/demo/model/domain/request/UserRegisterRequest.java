@@ -17,4 +17,9 @@ public class UserRegisterRequest implements Serializable {
     private String userPassword;
 
     private String  checkPassword;
+
+    /**
+     * 星球编号（和教程里的 planetCode 保持一致）
+     */
+    private String planetCode;
 }

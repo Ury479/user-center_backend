@@ -29,7 +29,7 @@ public class UserServiceTest {
 
         boolean result = userService.save(user);
         System.out.println(user.getId());
-        Assertions.assertTrue(result);
+        assertTrue(result);
     }
 
     @Test
@@ -38,43 +38,84 @@ public class UserServiceTest {
         String userAccount = "yupi";
         String userPassword = "";
         String checkPassword = "123456";
-        long result = userService.userRegister(userAccount, userPassword, checkPassword);
-        Assertions.assertEquals(-1, result);
+        String planetCode = "";
+        long result = userService.userRegister(userAccount, userPassword, checkPassword,planetCode);
+        assertEquals(-1, result);
+
+        // 1. 任意字段为空 -> 失败（这里先让密码为空）
+        userAccount = "yupi";
+        userPassword = "";
+        checkPassword = "12345678";
+        planetCode = "001";
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        assertEquals(-1, result);
 
         // 2. 账号过短 -> 失败
         userAccount = "yu";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
-        Assertions.assertEquals(-1, result);
+        userPassword = "12345678";
+        checkPassword = "12345678";
+        planetCode = "001";
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        assertEquals(-1, result);
 
-        // 3. 密码过短 -> 失败
+        // 3. 密码过短 -> 失败（< 8 位）
         userAccount = "yupi";
         userPassword = "123456";
         checkPassword = "123456";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
-        Assertions.assertEquals(-1, result);
+        planetCode = "001";
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        assertEquals(-1, result);
 
-        // 4. 账号含空格（非法字符） -> 失败
+        // 4. 账号包含非法字符（空格） -> 失败
         userAccount = "yupi  ";
         userPassword = "12345678";
         checkPassword = "12345678";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
-        Assertions.assertEquals(-1, result);
+        planetCode = "001";
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        assertEquals(-1, result);
 
         // 5. 密码和校验密码不一致 -> 失败
         userAccount = "yupi";
         userPassword = "12345678";
         checkPassword = "123456789";
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
-        Assertions.assertEquals(-1, result);
+        planetCode = "001";
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        assertEquals(-1, result);
 
-        // 6. ✅ 合法账号 + 合法密码 + 校验密码一致 + 不重复 -> 应该成功
-        userAccount = "yupi_" + System.currentTimeMillis();  // 确保不重复
+        // 6. planetCode 为空 -> 失败（如果你在 service 里对 planetCode 做了非空校验）
+        userAccount = "yupi_planet";
         userPassword = "12345678";
-        checkPassword = "12345678";                          // ⚠️ 一定要改回和 userPassword 一样
+        checkPassword = "12345678";
+        planetCode = "";
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        assertEquals(-1, result);
 
-        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        // 7. planetCode 重复 -> 失败
+        // 先用一个正常数据注册一次
+        userAccount = "yupi_unique_" + System.currentTimeMillis();
+        userPassword = "12345678";
+        checkPassword = "12345678";
+        planetCode = "p001";
+        long firstId = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        assertTrue(firstId > 0);
+
+        // 再用同一个 planetCode 注册第二个账号，应失败（-1）
+        userAccount = "yupi_another";
+        userPassword = "12345678";
+        checkPassword = "12345678";
+        // planetCode 仍然为 "p001"
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        assertEquals(-1, result);
+
+        // 8. ✅ 完全合法：账号 / 密码 / 校验密码一致 + planetCode 合法且不重复 -> 成功
+        userAccount = "yupi_" + System.currentTimeMillis();
+        userPassword = "12345678";
+        checkPassword = "12345678";
+        planetCode = "p" + System.currentTimeMillis(); // 确保 planetCode 也不重复
+
+        result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
         System.out.println("register result = " + result);
-        Assertions.assertTrue(result > 0);
+        assertTrue(result > 0);
     }
 
 }

@@ -69,4 +69,7 @@ public class User implements Serializable {
 
     public static final int ADMIN_ROLE = 1;
 
+    @TableField("planetCode")
+    private String planetCode;
+
 }
